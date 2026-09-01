@@ -1,0 +1,18 @@
+{% extends 'base.html' %}{% block content %}
+<div class="toolbar"><div><h1>My Work</h1><p>A visual map of commitments by assignee and due date.</p></div><div><a class="button" href="/work/new/">+ New Work</a></div></div>
+<form class="map-filters" method="get">
+  <label>Assignee<select name="assignee" onchange="this.form.submit()">
+    <option value="all" {% if selected_assignee == 'all' %}selected{% endif %}>All assignees</option>
+    <option value="unowned" {% if selected_assignee == 'unowned' %}selected{% endif %}>Unowned</option>
+    {% for p in people %}<option value="{{p.id}}" {% if selected_assignee == p.id|stringformat:'s' %}selected{% endif %}>{{p.name}}</option>{% endfor %}
+  </select></label>
+  <label>Due by<input type="date" name="due_by" value="{{due_by_raw}}"></label>
+  <button class="secondary" type="submit">Apply</button>
+  {% if due_by_raw %}<a class="filter-clear" href="/?assignee={{selected_assignee}}">Clear date</a>{% endif %}
+</form>
+<div class="map-summary"><strong>{{selected_label}}</strong>{% if due_by_raw %}<span>Due through {{due_by_raw}}</span>{% else %}<span>All due dates</span>{% endif %}</div>
+<div class="monthline"><span>AUG</span><span>SEP</span><span>OCT</span></div>
+<div class="map">
+{% for row in map_rows %}{% with w=row.work %}<section class="project status-{{ w.status }}{% if row.context_only %} context-only{% endif %}" style="--work-color:{{w.display_color}}"><div class="project-head"><div><div class="type-kicker">{{w.get_type_display}}{% if w.visibility == 'private' %} <span class="private-badge">Private</span>{% endif %}{% if row.context_only %} · context{% endif %}</div><a href="/work/{{w.id}}/"><h2>{{w.title}}</h2></a><div class="outcome">{{w.outcome|default:"Define the outcome"}}</div></div><div class="owner">{% if w.owner %}{{w.owner}}{% else %}<em class="unowned">Unowned</em>{% endif %}<strong>{{w.due_date|date:"M j"|default:"No date"}}</strong></div></div>
+<div class="children">{% for c in row.children %}<a class="child status-{{c.status}}" style="--work-color:{{c.display_color}}" href="/work/{{c.id}}/"><b>{{c.title}}{% if c.visibility == 'private' %} <span class="private-badge mini">Private</span>{% endif %}</b><span>{% if c.owner %}{{c.owner}}{% else %}<em class="unowned mini">Unowned</em>{% endif %} · {{c.due_date|date:"M j"|default:"No date"}}</span></a>{% empty %}{% if not row.context_only %}<a class="child empty" href="/work/new/?parent={{w.id}}">+ Add deliverable / task</a>{% endif %}{% endfor %}</div></section>{% endwith %}{% empty %}<div class="empty-state"><h2>No matching work</h2><p>Change the assignee or due-date filter, or create a new commitment.</p></div>{% endfor %}
+</div>{% endblock %}

@@ -1,0 +1,5 @@
+{% extends 'base.html' %}{% load work_extras %}{% block content %}
+<div class="toolbar board-head"><div><h1>Board</h1><p>Drag work between statuses or reorder it within a column.</p></div><a class="button" href="/work/new/">+ New Work</a></div>
+<form id="board-csrf" class="hidden">{% csrf_token %}</form>
+<div class="board" id="work-board">{% for key,items in groups.items %}<section class="board-column" data-status="{{key}}"><h3>{{ status_labels|get_item:key }}</h3><div class="board-dropzone">{% for w in items %}<article class="card status-{{w.status}}" draggable="true" data-work-id="{{w.id}}" style="--work-color:{{w.display_color}}"><a href="/work/{{w.id}}/"><b>{{w.title}}{% if w.visibility == 'private' %} <span class="private-badge mini">Private</span>{% endif %}</b><span>{% if w.owner %}{{w.owner}}{% else %}<em class="unowned">Unowned</em>{% endif %}<span>{{w.due_date|date:"M j"|default:"No date"}}</span></span></a><div class="drag-handle" title="Drag to move">⋮⋮</div></article>{% endfor %}<div class="column-empty">Drop work here</div></div></section>{% endfor %}</div>
+<div id="board-save-state" class="save-state" aria-live="polite"></div>{% endblock %}
