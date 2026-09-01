@@ -107,22 +107,22 @@ Regression tests also verify that Django can discover the stylesheet:
 
     docker compose run --rm web python manage.py test work.tests.test_static_assets
 
-## Private work and S0 sharing
+## Private work and sharing
 
 Work now has two visibility modes:
 
 - **Organization** — visible to authenticated users.
 - **Private** — visible only to the Person who created it and People explicitly selected under **Share private work with**.
 
-Private work remains owned by its creator. Sharing grants access; it does not transfer ownership. This is intended to let each person keep personal work on the same board while selectively granting System Zero (or another Person account) access.
+Private work remains owned by its creator. Sharing grants access; it does not transfer ownership. This is intended to let each person keep personal work on the same board while selectively granting other account access.
 
 The privacy rule is enforced in the backend through `Work.objects.visible_to(user)` and is applied to the Work Map, Board, direct detail URLs, board drag/drop mutations, REST API, CSV/JSON exports, activity, and dependencies. A dependency is returned only when both work items are visible to the requesting user; there are no hidden/private blocker placeholders.
 
-To use S0 later, create a normal Django User + Person named e.g. `System Zero`, then explicitly share selected private work with that Person. S0 can authenticate separately against the same API while also owning normal organization work.
+To use other profiles later, create a normal Django User + Person named e.g. `User x`, then explicitly share selected private work with that Person. Users can authenticate separately against the same API while also owning normal organization work.
 
 ## DigitalOcean / Git + Docker deployment
 
-The repository is ready for the simple deployment loop you described: clone/pull on a droplet and rebuild Compose.
+The repository is ready for the simple deployment loop: clone/pull on a droplet and rebuild Compose.
 
 First deployment:
 
