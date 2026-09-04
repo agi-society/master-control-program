@@ -29,7 +29,7 @@ class WorkForm(forms.ModelForm):
         labels={'visible_to':'Share private work with'}
         help_texts={'visible_to':'Only the creator and explicitly selected people can see private work.'}
 
-def __init__(self, *args, actor=None, **kwargs):
+    def __init__(self, *args, actor=None, **kwargs):
     self.actor = actor
     super().__init__(*args, **kwargs)
 
