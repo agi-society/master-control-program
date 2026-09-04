@@ -29,27 +29,49 @@ class WorkForm(forms.ModelForm):
         labels={'visible_to':'Share private work with'}
         help_texts={'visible_to':'Only the creator and explicitly selected people can see private work.'}
 
-    def __init__(self,*args,actor=None,**kwargs):
-        self.actor=actor
-        super().__init__(*args,**kwargs)
-        user=getattr(actor,'user',None) if actor else None
-        qs=Work.objects.visible_to(user).order_by('title') if user else Work.objects.none()
-        if self.instance and self.instance.pk:
-            qs=qs.exclude(pk=self.instance.pk)
-            self.fields['dependencies'].initial=self.instance.dependencies.filter(depends_on__in=qs).values_list('depends_on_id',flat=True)
-        self.fields['dependencies'].queryset=qs
-        self.fields['parent'].queryset=qs
-        self.fields['visible_to'].queryset=self.fields['visible_to'].queryset.filter(active=True).exclude(pk=getattr(actor,'pk',None)).order_by('name')
+def __init__(self, *args, actor=None, **kwargs):
+    self.actor = actor
+    super().__init__(*args, **kwargs)
 
-        # Sharing is creator-controlled. A person a private item is shared with may
-        # work on it, but cannot re-share it, make it public, or reassign ownership.
-        if self.instance and self.instance.pk and self.instance.created_by_id and actor and self.instance.created_by_id != actor.id:
-            self.fields.pop('visibility',None)
-            self.fields.pop('visible_to',None)
-            if self.instance.visibility=='private':
-                self.fields.pop('owner',None)
-            if self.instance.parent_id and not qs.filter(pk=self.instance.parent_id).exists():
-                self.fields.pop('parent',None)
+    user = getattr(actor, 'user', None) if actor else None
+    qs = Work.objects.visible_to(user).order_by('title') if user else Work.objects.none()
+
+    if self.instance and self.instance.pk:
+        qs = qs.exclude(pk=self.instance.pk)
+        self.fields['dependencies'].initial = list(
+            self.instance.dependencies
+            .filter(depends_on__in=qs)
+            .values_list('depends_on_id', flat=True)
+        )
+    else:
+        self.fields['dependencies'].initial = []
+
+    self.fields['dependencies'].queryset = qs
+    self.fields['parent'].queryset = qs
+    self.fields['visible_to'].queryset = (
+        self.fields['visible_to'].queryset
+        .filter(active=True)
+        .exclude(pk=getattr(actor, 'pk', None))
+        .order_by('name')
+    )
+
+    # Sharing is creator-controlled. A person a private item is shared with may
+    # work on it, but cannot re-share it, make it public, or reassign ownership.
+    if (
+        self.instance
+        and self.instance.pk
+        and self.instance.created_by_id
+        and actor
+        and self.instance.created_by_id != actor.id
+    ):
+        self.fields.pop('visibility', None)
+        self.fields.pop('visible_to', None)
+
+        if self.instance.visibility == 'private':
+            self.fields.pop('owner', None)
+
+        if self.instance.parent_id and not qs.filter(pk=self.instance.parent_id).exists():
+            self.fields.pop('parent', None)
 
     def clean(self):
         cleaned=super().clean()
