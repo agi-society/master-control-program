@@ -29,12 +29,12 @@ class WorkForm(forms.ModelForm):
         labels={'visible_to':'Share private work with'}
         help_texts={'visible_to':'Only the creator and explicitly selected people can see private work.'}
 
-    def __init__(self, *args, actor=None, **kwargs):
-    self.actor = actor
-    super().__init__(*args, **kwargs)
+def __init__(self, *args, actor=None, **kwargs):
+        self.actor = actor
+        super().__init__(*args, **kwargs)
 
-    user = getattr(actor, 'user', None) if actor else None
-    qs = Work.objects.visible_to(user).order_by('title') if user else Work.objects.none()
+        user = getattr(actor, 'user', None) if actor else None
+        qs = Work.objects.visible_to(user).order_by('title') if user else Work.objects.none()
 
     if self.instance and self.instance.pk:
         qs = qs.exclude(pk=self.instance.pk)
@@ -73,7 +73,7 @@ class WorkForm(forms.ModelForm):
         if self.instance.parent_id and not qs.filter(pk=self.instance.parent_id).exists():
             self.fields.pop('parent', None)
 
-    def clean(self):
+def clean(self):
         cleaned=super().clean()
         visibility=cleaned.get('visibility',getattr(self.instance,'visibility','org'))
         creator=getattr(self.instance,'created_by',None) or self.actor
@@ -82,7 +82,7 @@ class WorkForm(forms.ModelForm):
             cleaned['owner']=creator
         return cleaned
 
-    def save(self,commit=True):
+def save(self,commit=True):
         obj=super().save(commit=commit)
         if commit:
             if obj.visibility=='private' and obj.created_by_id:
